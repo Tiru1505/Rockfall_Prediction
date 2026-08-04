@@ -95,6 +95,7 @@ class PredictionOut(BaseModel):
     site_id: Optional[str] = None
     site_name: str
     source: Optional[str] = "manual"
+    simulated: Optional[int] = 0
     image_filename: Optional[str]
     image_risk: float
     sensor_risk: float
@@ -122,6 +123,7 @@ class AlertOut(BaseModel):
     final_risk: float
     message: str
     acknowledged: int
+    simulated: Optional[int] = 0
 
     class Config:
         from_attributes = True
@@ -210,3 +212,14 @@ class MonitorStatus(BaseModel):
 class MonitorControl(BaseModel):
     action: str  # "start" | "stop" | "tick"
     interval_seconds: Optional[int] = Field(default=None, ge=5, le=3600)
+
+
+# ---------- Drill mode ----------
+class DrillStart(BaseModel):
+    """Force a site's risk to a target so the alert path can be demonstrated."""
+    site_id: str
+    target_risk: float = Field(default=88.0, ge=5, le=99)
+    mode: str = Field(default="ramp", pattern="^(ramp|instant)$")
+    # Evaluations the ramp is spread over. Each step is one monitoring cycle,
+    # so 4 steps at a 60s interval takes ~4 minutes.
+    steps: int = Field(default=4, ge=1, le=60)

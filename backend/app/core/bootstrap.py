@@ -24,9 +24,11 @@ _ADDED_COLUMNS = {
     "predictions": {
         "site_id": "VARCHAR DEFAULT 'site-a'",
         "source": "VARCHAR DEFAULT 'manual'",
+        "simulated": "INTEGER DEFAULT 0",
     },
     "alerts": {
         "site_id": "VARCHAR DEFAULT 'site-a'",
+        "simulated": "INTEGER DEFAULT 0",
     },
 }
 

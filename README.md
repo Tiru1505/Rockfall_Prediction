@@ -73,6 +73,49 @@ against the alert threshold, and an **AI Risk Assessment** panel with
 
 plus a network overview ranking every site by risk.
 
+## Drill mode — demonstrating the alert path
+
+With no slope image uploaded, `image_risk` sits at its neutral 30 default, so
+the fused ceiling is roughly
+
+```
+0.40×30 + 0.35×100 + 0.25×~35  ≈  56%
+```
+
+The 80% alert threshold is therefore **unreachable from the simulated feed**,
+and alerting could never be shown working. Drill mode forces a site to a target
+score so the whole escalation path can be demonstrated.
+
+From **Live Monitor → Alert Drill** (admin only): pick a target, choose *ramp*
+(risk climbs over N readings, so the trend, forecast and escalating
+recommendations are all visible) or *instant*, and start. A 4-step ramp to 88%
+produces:
+
+```
+reading 1   40.5%  Medium
+reading 2   56.3%  Medium
+reading 3   72.0%  High
+reading 4   87.8%  Critical   <- alert fires, AI escalates to CRITICAL
+reading 5   87.8%  Critical   <- holds, then the real feed resumes
+```
+
+**Everything a drill produces is marked.** Predictions and alerts carry
+`simulated = 1`, alert text is prefixed `[DRILL]`, the CSV export has a
+`simulated` column, and the UI badges them in the alert list, history table and
+live gauge. A forced alert indistinguishable from a real one would corrupt the
+incident record of a safety-warning system, so this is deliberate.
+
+**Clear all drill data** (in the same panel, or
+`DELETE /api/monitor/drill-data`) removes every simulated reading and alert
+afterwards, leaving only genuine data.
+
+```
+GET    /api/monitor/drill              active drills
+POST   /api/monitor/drill              start        (admin)
+DELETE /api/monitor/drill/{site_id}    cancel       (admin)
+DELETE /api/monitor/drill-data         purge        (admin)
+```
+
 ## Per-site graphs
 
 **Site Graphs** renders one site over a 6h / 24h / 7d / 30d window:

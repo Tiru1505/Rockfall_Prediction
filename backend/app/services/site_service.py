@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.db_models import MiningSite, Prediction, Alert, RiskLevel
-from app.services import weather_service, sensor_service, image_predictor
+from app.services import weather_service, sensor_service, image_predictor, drill_service
 from app.services.risk_engine import fuse_risk
 
 
@@ -67,11 +67,23 @@ def evaluate_site(
         weather_risk=weather["weather_risk"],
     )
 
+    # A drill overrides the fused result to a target score so the alert path can
+    # be demonstrated (the natural ceiling is ~56%, below the 80% threshold).
+    # Everything it produces is flagged `simulated` — see drill_service.
+    drill_target = drill_service.consume(site.site_id)
+    simulated = 0
+    if drill_target is not None:
+        simulated = 1
+        source = "drill"
+        parts = drill_service.components_for(drill_target)
+        fused = fuse_risk(**parts)
+
     prediction = Prediction(
         timestamp=datetime.utcnow(),
         site_id=site.site_id,
         site_name=site.name,
         source=source,
+        simulated=simulated,
         image_filename=image_filename,
         image_risk=fused["image_risk"],
         sensor_risk=fused["sensor_risk"],
@@ -91,6 +103,9 @@ def evaluate_site(
     db.refresh(prediction)
 
     if fused["final_risk"] >= settings.ALERT_THRESHOLD:
+        # Drill alerts are prefixed as well as flagged, so they are obvious even
+        # somewhere the `simulated` field isn't rendered (a CSV export, a log).
+        prefix = "[DRILL] " if simulated else ""
         db.add(Alert(
             timestamp=datetime.utcnow(),
             prediction_id=prediction.id,
@@ -98,8 +113,9 @@ def evaluate_site(
             site_name=site.name,
             risk_level=RiskLevel(fused["risk_level"]),
             final_risk=fused["final_risk"],
+            simulated=simulated,
             message=(
-                f"High rockfall risk detected at {site.name}: "
+                f"{prefix}High rockfall risk detected at {site.name}: "
                 f"{fused['final_risk']}% ({fused['risk_level']})."
             ),
         ))

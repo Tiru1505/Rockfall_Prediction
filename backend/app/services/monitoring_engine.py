@@ -132,6 +132,7 @@ class MonitoringEngine:
             "sensor_risk": prediction.sensor_risk,
             "weather_risk": prediction.weather_risk,
             "confidence": prediction.confidence,
+            "simulated": bool(prediction.simulated),
             "ground_vibration": prediction.ground_vibration,
             "tilt_deg": prediction.tilt_deg,
             "soil_moisture": prediction.soil_moisture,

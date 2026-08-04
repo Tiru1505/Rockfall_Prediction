@@ -58,7 +58,14 @@ export default function AlertsPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <AlertTriangle size={16} style={{ color: colorForLevel(a.risk_level) }} className="shrink-0" />
                     <div className="min-w-0">
-                      <div className="text-sm text-stone">{a.message}</div>
+                      <div className="text-sm text-stone flex items-center gap-2 flex-wrap">
+                        {a.simulated ? (
+                          <span className="text-[9px] uppercase tracking-widest font-mono text-critical border border-critical/40 rounded px-1 py-0.5">
+                            drill
+                          </span>
+                        ) : null}
+                        {a.message}
+                      </div>
                       <div className="text-xs text-slate-muted font-mono mt-0.5">
                         {a.site_name} · {new Date(a.timestamp).toLocaleString()}
                         {a.acknowledged ? ' · acknowledged' : ''}

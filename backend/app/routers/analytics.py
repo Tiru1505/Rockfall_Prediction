@@ -60,15 +60,15 @@ def export_history_csv(db: Session = Depends(get_db), site_id: Optional[str] = Q
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow([
-        "id", "timestamp", "site_id", "site_name", "source", "image_filename",
-        "image_risk", "sensor_risk",
+        "id", "timestamp", "site_id", "site_name", "source", "simulated",
+        "image_filename", "image_risk", "sensor_risk",
         "weather_risk", "final_risk", "risk_level", "confidence", "rainfall_mm",
         "humidity_pct", "temperature_c", "ground_vibration", "soil_moisture", "tilt_deg",
     ])
     for p in predictions:
         writer.writerow([
-            p.id, p.timestamp, p.site_id, p.site_name, p.source, p.image_filename,
-            p.image_risk, p.sensor_risk,
+            p.id, p.timestamp, p.site_id, p.site_name, p.source, p.simulated,
+            p.image_filename, p.image_risk, p.sensor_risk,
             p.weather_risk, p.final_risk,
             p.risk_level.value if hasattr(p.risk_level, "value") else p.risk_level,
             p.confidence, p.rainfall_mm, p.humidity_pct, p.temperature_c,

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import {
   Activity, CloudRain, Droplets, Thermometer, BellRing, Play, Pause,
-  RefreshCw, Radio, Waves, Gauge as GaugeIcon,
+  RefreshCw, Radio, Waves, Gauge as GaugeIcon, Siren,
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine,
@@ -11,6 +11,7 @@ import RiskGauge from '../components/RiskGauge'
 import StatCard from '../components/StatCard'
 import Topbar from '../components/Topbar'
 import AIInsightPanel from '../components/AIInsightPanel'
+import DrillPanel from '../components/DrillPanel'
 import { useSite } from '../context/SiteContext'
 import { useAuth } from '../context/AuthContext'
 import { colorForLevel, relativeTime, shortTime, TREND_ARROW, TREND_COLOR } from '../lib/risk'
@@ -225,6 +226,7 @@ export default function LiveMonitorPage() {
 
   const snap = live?.live
   const awaiting = snap?.awaiting_first_reading || snap?.final_risk == null
+  const drill = live?.drill ?? null
 
   return (
     <div className="flex-1">
@@ -250,8 +252,19 @@ export default function LiveMonitorPage() {
           </div>
         ) : (
           <>
+            {snap.simulated && (
+              <div className="flex items-center gap-2.5 text-sm bg-critical/10 border border-critical/40 rounded-lg px-5 py-3">
+                <Siren size={16} className="text-critical shrink-0" />
+                <span className="text-stone">
+                  <span className="font-semibold text-critical">DRILL IN PROGRESS</span>
+                  {' — '}this reading is simulated, not a real measurement. Any alert
+                  raised now is flagged and can be cleared afterwards.
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-panel border border-line rounded-lg p-6 flex flex-col items-center justify-center">
+              <div className={`bg-panel border rounded-lg p-6 flex flex-col items-center justify-center ${snap.simulated ? 'border-critical/50' : 'border-line'}`}>
                 <span className="text-xs uppercase tracking-widest text-slate-muted mb-2 text-center">
                   {snap.site_name}
                 </span>
@@ -259,6 +272,11 @@ export default function LiveMonitorPage() {
                 <span className="text-[11px] font-mono text-slate-muted mt-3">
                   updated {relativeTime(snap.timestamp)}
                 </span>
+                {snap.simulated && (
+                  <span className="mt-1 text-[10px] uppercase tracking-widest text-critical">
+                    simulated reading
+                  </span>
+                )}
               </div>
 
               <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 content-start">
@@ -307,7 +325,19 @@ export default function LiveMonitorPage() {
               </ResponsiveContainer>
             </div>
 
-            <AIInsightPanel insight={insight} />
+            {isAdmin ? (
+              <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
+                <div className="min-w-0"><AIInsightPanel insight={insight} /></div>
+                <DrillPanel
+                  siteId={siteId}
+                  siteName={site?.name ?? 'this site'}
+                  drill={drill}
+                  onChanged={poll}
+                />
+              </div>
+            ) : (
+              <AIInsightPanel insight={insight} />
+            )}
 
             <NetworkStrip overview={overview} activeId={siteId} onSelect={selectSite} />
 
@@ -324,7 +354,14 @@ export default function LiveMonitorPage() {
                 <ul className="space-y-2">
                   {live.alerts.map((a) => (
                     <li key={a.id} className="flex items-center justify-between gap-4 text-sm border-b border-line last:border-0 pb-2 last:pb-0">
-                      <span className="text-stone">{a.message}</span>
+                      <span className="text-stone flex items-center gap-2">
+                        {a.simulated && (
+                          <span className="text-[9px] uppercase tracking-widest font-mono text-critical border border-critical/40 rounded px-1 py-0.5 shrink-0">
+                            drill
+                          </span>
+                        )}
+                        {a.message}
+                      </span>
                       <span className="font-mono text-xs shrink-0" style={{ color: colorForLevel(a.risk_level) }}>
                         {new Date(a.timestamp).toLocaleString()}
                       </span>

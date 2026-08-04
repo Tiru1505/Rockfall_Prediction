@@ -82,7 +82,10 @@ class Prediction(Base):
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
     site_id = Column(String, default="site-a", index=True)
     site_name = Column(String, default="Site-A")
-    source = Column(String, default="manual")  # "manual" | "monitor"
+    source = Column(String, default="manual")  # "manual" | "monitor" | "drill"
+    # 1 when produced by a drill (see services/drill_service.py). Drill readings
+    # must stay distinguishable from real ones in a safety-warning system.
+    simulated = Column(Integer, default=0)
 
     image_filename = Column(String, nullable=True)
     image_risk = Column(Float, default=0.0)          # 0-100
@@ -114,3 +117,4 @@ class Alert(Base):
     final_risk = Column(Float, default=0.0)
     message = Column(String, default="")
     acknowledged = Column(Integer, default=0)  # 0/1 boolean
+    simulated = Column(Integer, default=0)     # raised by a drill, not a real reading

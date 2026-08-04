@@ -4,12 +4,13 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.timeutil import utc_iso
 from app.core.deps import get_current_user, require_admin
 from app.models.db_models import MiningSite, Prediction, Alert, SiteStatus, User
-from app.schemas.schemas import MonitorStatus, MonitorControl
-from app.services import ai_insights, site_service
+from app.schemas.schemas import MonitorStatus, MonitorControl, DrillStart
+from app.services import ai_insights, site_service, drill_service
 from app.services.monitoring_engine import engine
 
 router = APIRouter(prefix="/api/monitor", tags=["Live Monitoring"])
@@ -103,6 +104,7 @@ def live_site(site_id: str, db: Session = Depends(get_db)):
             "monitoring_enabled": bool(site.monitoring_enabled),
         },
         "live": snap,
+        "drill": drill_service.active(site_id).as_dict() if drill_service.active(site_id) else None,
         "alerts": [
             {
                 "id": a.id,
@@ -111,6 +113,7 @@ def live_site(site_id: str, db: Session = Depends(get_db)):
                 "final_risk": a.final_risk,
                 "message": a.message,
                 "acknowledged": a.acknowledged,
+                "simulated": bool(a.simulated),
             }
             for a in alerts
         ],
@@ -219,6 +222,106 @@ def network_insights(db: Session = Depends(get_db), _user: User = Depends(get_cu
     }
 
 
+# -------------------------------------------------------------- drill mode
+
+@router.get("/drill")
+def list_drills():
+    """Currently running drills."""
+    return {"drills": drill_service.all_active()}
+
+
+@router.post("/drill")
+def start_drill(
+    payload: DrillStart,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """
+    Drive a site's risk to a target so the alert and escalation path can be
+    demonstrated. The natural simulated ceiling is ~56%, below the 80% alert
+    threshold, so this is the only way to exercise alerting.
+
+    Everything produced is flagged `simulated` and its alert text prefixed
+    `[DRILL]`. Use DELETE /api/monitor/drill-data to clear it afterwards.
+    """
+    site = site_service.get_site(db, payload.site_id)
+    if not site:
+        raise HTTPException(status_code=404, detail=f"Site '{payload.site_id}' not found")
+
+    latest = (
+        db.query(Prediction)
+        .filter(Prediction.site_id == site.site_id)
+        .order_by(Prediction.timestamp.desc())
+        .first()
+    )
+    current = latest.final_risk if latest else 0.0
+
+    drill = drill_service.start(
+        site_id=site.site_id,
+        target_risk=payload.target_risk,
+        mode=payload.mode,
+        steps=payload.steps,
+        current_risk=current,
+    )
+
+    # Evaluate immediately so the operator sees the drill take effect now rather
+    # than waiting out a full monitoring interval (60s in production).
+    prediction = site_service.evaluate_site(db, site, source="drill")
+
+    return {
+        "status": "started",
+        "drill": drill.as_dict(),
+        "first_reading": {
+            "final_risk": prediction.final_risk,
+            "risk_level": (
+                prediction.risk_level.value
+                if hasattr(prediction.risk_level, "value") else prediction.risk_level
+            ),
+            "simulated": prediction.simulated,
+        },
+        "alert_threshold": settings.ALERT_THRESHOLD,
+    }
+
+
+@router.delete("/drill/{site_id}")
+def stop_drill(site_id: str, _admin: User = Depends(require_admin)):
+    """Cancel a running drill. Risk returns to the real feed on the next cycle."""
+    cancelled = drill_service.cancel(site_id)
+    return {"status": "cancelled" if cancelled else "no_active_drill", "site_id": site_id}
+
+
+@router.delete("/drill-data")
+def purge_drill_data(
+    site_id: str | None = Query(None, description="Limit to one site; omit for all"),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """
+    Delete every prediction and alert produced by a drill, so the stored record
+    contains only genuine readings once a demo is finished.
+    """
+    pred_q = db.query(Prediction).filter(Prediction.simulated == 1)
+    alert_q = db.query(Alert).filter(Alert.simulated == 1)
+    if site_id:
+        pred_q = pred_q.filter(Prediction.site_id == site_id)
+        alert_q = alert_q.filter(Alert.site_id == site_id)
+
+    predictions = pred_q.count()
+    alerts = alert_q.count()
+    pred_q.delete(synchronize_session=False)
+    alert_q.delete(synchronize_session=False)
+    db.commit()
+
+    drill_service.cancel_all()
+
+    return {
+        "status": "purged",
+        "site_id": site_id,
+        "predictions_deleted": predictions,
+        "alerts_deleted": alerts,
+    }
+
+
 # ------------------------------------------------------------------ helpers
 
 def _snapshot_from_db(db: Session, site: MiningSite) -> dict | None:
@@ -268,6 +371,7 @@ def _snapshot_from_db(db: Session, site: MiningSite) -> dict | None:
         "sensor_risk": latest.sensor_risk,
         "weather_risk": latest.weather_risk,
         "confidence": latest.confidence,
+        "simulated": bool(latest.simulated),
         "ground_vibration": latest.ground_vibration,
         "tilt_deg": latest.tilt_deg,
         "soil_moisture": latest.soil_moisture,

@@ -58,6 +58,7 @@ export default function HistoryPage() {
                 <option value="">All sources</option>
                 <option value="monitor">Auto (monitor)</option>
                 <option value="manual">Manual</option>
+                <option value="drill">Drill (simulated)</option>
               </select>
               <button
                 onClick={exportCsv}
@@ -88,8 +89,11 @@ export default function HistoryPage() {
                     <td className="py-2 pr-4 font-mono text-xs text-slate-muted">{new Date(r.timestamp).toLocaleString()}</td>
                     <td className="py-2 pr-4 text-stone">{r.site_name}</td>
                     <td className="py-2 pr-4">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-slate-muted">
-                        {r.source ?? 'manual'}
+                      <span
+                        className="font-mono text-[10px] uppercase tracking-wider"
+                        style={{ color: r.simulated ? 'var(--color-critical)' : 'var(--color-slate-muted)' }}
+                      >
+                        {r.simulated ? 'drill' : (r.source ?? 'manual')}
                       </span>
                     </td>
                     <td className="py-2 pr-4 font-mono">{r.image_risk}%</td>
