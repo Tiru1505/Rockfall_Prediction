@@ -212,9 +212,14 @@ a Postgres instance so `DATABASE_URL` is present.
 
 ### 2. Frontend → Vercel
 
-Import the repo. `vercel.json` supplies the build command and output directory,
-and rewrites all routes to `index.html` (required — the app uses `BrowserRouter`,
-so a hard refresh on `/live` would otherwise 404).
+Import the repo and **leave "Root Directory" as the repository root** — do not
+set it to `frontend`. `vercel.json` lives at the root and already builds from
+`frontend/`; pointing Vercel's root at `frontend/` makes it ignore that file,
+and you lose the SPA rewrite below.
+
+`vercel.json` supplies the build command and output directory, and rewrites all
+routes to `index.html`. That rewrite is required: the app uses `BrowserRouter`,
+so without it a hard refresh on `/live` or `/sites` returns 404.
 
 Add one environment variable, then deploy:
 
