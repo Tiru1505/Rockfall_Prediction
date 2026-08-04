@@ -6,9 +6,20 @@ import axios from 'axios'
  *
  * In production the frontend and backend are on different hosts (Vercel and
  * Render), so there is no proxy. Set `VITE_API_BASE_URL` at build time to the
- * deployed backend, e.g. https://rockfall-api.onrender.com/api
+ * deployed backend, e.g. https://rockfall-api.onrender.com
+ *
+ * Every route on the backend is mounted under `/api`, so the suffix is not
+ * optional — but omitting it is an easy mistake whose only symptom is a bare
+ * 404 ("Not Found") on login, which looks like a broken backend rather than a
+ * typo'd variable. Normalise it here so both forms work.
  */
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+function resolveApiBaseUrl() {
+  const configured = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+  if (!configured) return '/api' // dev: let the Vite proxy handle it
+  return configured.endsWith('/api') ? configured : `${configured}/api`
+}
+
+export const API_BASE_URL = resolveApiBaseUrl()
 
 const api = axios.create({ baseURL: API_BASE_URL })
 
