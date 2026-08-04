@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --color-basalt: #14171a;
+  --color-panel: #1d2226;
+  --color-panel-raised: #232a30;
+  --color-line: #2a3036;
+  --color-stone: #edeae3;
+  --color-slate-muted: #8b939b;
+
+  --color-hazard: #e8a33d;
+  --color-critical: #c1503c;
+  --color-safe: #4fa894;
+  --color-signal: #5b8aa6;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+[data-theme='light'] {
+  --color-basalt: #f3f1ec;
+  --color-panel: #ffffff;
+  --color-panel-raised: #f8f6f1;
+  --color-line: #e2ddd2;
+  --color-stone: #201d18;
+  --color-slate-muted: #6b6559;
+}
+
+body {
+  background-color: var(--color-basalt);
+  color: var(--color-stone);
+  font-family: var(--font-body);
+}
+
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+
+/* subtle topographic contour texture used behind the sidebar / hero panels */
+.contour-bg {
+  background-image:
+    repeating-radial-gradient(circle at 15% 20%, rgba(237,234,227,0.035) 0px, rgba(237,234,227,0.035) 1px, transparent 1px, transparent 26px),
+    repeating-radial-gradient(circle at 85% 75%, rgba(237,234,227,0.03) 0px, rgba(237,234,227,0.03) 1px, transparent 1px, transparent 34px);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-basalt); }
+::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 4px; }
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
