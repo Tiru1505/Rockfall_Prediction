@@ -32,8 +32,8 @@ functional end-to-end app, but two of the three risk signals are built from
 See "What's real vs. simulated" below — it matters for how you present this.
 
 Dataset Links:
-https://www.kaggle.com/datasets/noaa/noaa-severe-weather-data-inventory
-https://www.usgs.gov/data/landslide-inventories-across-united-states-ver-30-february-2025?utm_source=chatgpt.com
+(https://www.kaggle.com/datasets/noaa/noaa-severe-weather-data-inventory)
+(https://www.usgs.gov/data/landslide-inventories-across-united-states-ver-30-february-2025?utm_source=chatgpt.com)
 
 ---
 
