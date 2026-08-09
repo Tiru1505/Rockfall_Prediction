@@ -28,7 +28,7 @@ automatically on first run.
 
 **Read this before assuming any number is "real AI":** this is a genuinely
 functional end-to-end app, but two of the three risk signals are built from
-**real datasets you supplied**, and one is an explicitly-labeled placeholder.
+**real datasets got from open source like kaggle, USGS Landslide Inventory, etc**, and one is an explicitly-labeled placeholder.
 See "What's real vs. simulated" below — it matters for how you present this.
 
 ---
