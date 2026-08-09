@@ -1,15 +1,137 @@
 # StrataWatch — AI-Based Rockfall Prediction & Early Warning System
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open%20App-e8a33d?style=for-the-badge)](https://rockfall-prediction-theta.vercel.app)
+[![API](https://img.shields.io/badge/API-Swagger%20Docs-5b8aa6?style=for-the-badge)](https://rockfall-api-b5ju.onrender.com/docs)
+[![Health](https://img.shields.io/badge/API-Health-4fa894?style=for-the-badge)](https://rockfall-api-b5ju.onrender.com/api/health)
+
 A working full-stack prototype: FastAPI backend + React (Vite/Tailwind) dashboard
 that continuously monitors **multiple mining sites**, fuses image, sensor and
 weather signals into a rockfall risk score per site, explains that score with a
 statistical insight engine, and ships with auth, alerts, history, per-site
 graphs, analytics and an admin panel.
 
+## 🔗 Live deployment
+
+| | Link |
+|---|---|
+| **Dashboard** | https://rockfall-prediction-theta.vercel.app |
+| **API docs (Swagger)** | https://rockfall-api-b5ju.onrender.com/docs |
+| **API health** | https://rockfall-api-b5ju.onrender.com/api/health |
+
+Register an account and pick role **Admin** to get the Admin Panel, the
+monitoring-engine controls and drill mode. Three demo mining sites are seeded
+automatically on first run.
+
+> **Note on first load:** the backend runs on Render's free tier, which sleeps
+> after ~15 minutes of inactivity. The first request after a gap can take
+> 30–60 seconds while it wakes up. Subsequent requests are fast.
+
 **Read this before assuming any number is "real AI":** this is a genuinely
 functional end-to-end app, but two of the three risk signals are built from
 **real datasets you supplied**, and one is an explicitly-labeled placeholder.
 See "What's real vs. simulated" below — it matters for how you present this.
+
+---
+
+## 📸 Screenshots
+
+> Drop your captures into `docs/screenshots/` using the filenames below and they
+> will appear here automatically. See `docs/screenshots/README.md` for the shot
+> list and how to capture them.
+
+### Dashboard — fused risk at a glance
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Live Monitor — continuous monitoring with AI assessment
+![Live Monitor](docs/screenshots/live-monitor.png)
+
+### AI Risk Assessment — drivers, trend, forecast and recommendations
+![AI Insight Panel](docs/screenshots/ai-insight.png)
+
+### Alert drill — escalation to Critical
+![Drill escalation](docs/screenshots/drill-critical.png)
+
+### Mining Sites — switch between sites or add new ones
+![Mining Sites](docs/screenshots/mining-sites.png)
+
+### Site Graphs — per-site analytics
+![Site Graphs](docs/screenshots/site-graphs.png)
+
+### Alerts — threshold breaches, with drill data clearly flagged
+![Alerts](docs/screenshots/alerts.png)
+
+---
+
+## 🖥️ Sample output
+
+Real output captured from a running instance.
+
+**Service health** — `GET /api/health`
+
+```json
+{
+  "status": "ok",
+  "service": "AI Rockfall Prediction & Early Warning System",
+  "monitoring": {
+    "running": true,
+    "interval_seconds": 20,
+    "last_tick": "2026-08-09T16:04:02.714064+00:00",
+    "tick_count": 18,
+    "sites_tracked": 3,
+    "last_error": null
+  }
+}
+```
+
+**AI assessment under normal conditions** — `GET /api/monitor/insights/site-a`
+
+```
+Bailadila Iron Ore — Bench 4 is at 21.9% fused risk (Low). Slope Imagery is the
+dominant driver at 55% of the score (raw 30.0%). The score has held flat across
+the last 18 readings. Signal is steady (σ=0.58).
+
+trend    : Stable (-0.064 / reading)
+drivers  : Slope Imagery 54.7%  |  Weather 23.8%  |  Geotechnical Sensors 21.4%
+```
+
+**Alert drill — escalation to Critical** (4-step ramp to 88%)
+
+```
+reading     fused  level     flag
+1           38.9%  Low       DRILL
+2           55.2%  Medium    DRILL
+3           71.5%  High      DRILL
+4           87.8%  Critical  DRILL     <- alert threshold (80%) crossed
+5           87.8%  Critical  DRILL
+```
+
+**AI assessment during the drill** — note how the narrative and actions escalate
+
+```
+Bailadila Iron Ore — Bench 4 is at 87.8% fused risk (Critical). Geotechnical
+Sensors is the dominant driver at 38% of the score (raw 96.0%). Risk has climbed
++63.0 points over the last 24 readings (+1.94/reading). Signal is erratic
+(σ=24.78). Outlier readings detected on: fused risk score.
+
+[CRITICAL] Clear personnel and equipment from the runout zone below this face.
+[HIGH]     Notify the geotechnical engineer on duty and log a face inspection.
+[HIGH]     Risk is escalating at +1.94%/reading — shorten the monitoring
+           interval and brief the incoming shift.
+[HIGH]     Fused risk score is above its baseline (87.8% vs 23.45%) — verify
+           the instrument before acting on the reading.
+[MEDIUM]   Sensor-led risk: cross-check displacement against survey prisms and
+           confirm instrument calibration.
+```
+
+**Alert raised** — `GET /api/alerts?site_id=site-a`
+
+```
+simulated=1  Critical  87.8%  [DRILL] High rockfall risk detected at
+                              Bailadila Iron Ore — Bench 4: 87.8% (Critical).
+```
+
+Every drill-generated row is flagged `simulated` and prefixed `[DRILL]`, so
+demonstration data can never be mistaken for a real incident.
 
 ---
 
@@ -270,8 +392,18 @@ Add one environment variable, then deploy:
 VITE_API_BASE_URL = https://<your-render-service>.onrender.com/api
 ```
 
-Include `/api`, omit any trailing slash. Vite **inlines this at build time**, so
-changing it later needs a redeploy, not just a restart.
+Vite **inlines this at build time**, so changing it later needs a redeploy, not
+just a restart. Setting the variable and only clicking "Redeploy" sometimes does
+not produce a new build — pushing a commit reliably does.
+
+The `/api` suffix is added automatically if you leave it off, and trailing
+slashes are stripped, so all of these work:
+
+```
+https://your-service.onrender.com
+https://your-service.onrender.com/
+https://your-service.onrender.com/api
+```
 
 ### 3. Close the CORS loop
 
