@@ -35,30 +35,46 @@ See "What's real vs. simulated" below — it matters for how you present this.
 
 ## 📸 Screenshots
 
-> Drop your captures into `docs/screenshots/` using the filenames below and they
-> will appear here automatically. See `docs/screenshots/README.md` for the shot
-> list and how to capture them.
-
 ### Dashboard — fused risk at a glance
+The risk gauge, the three contributing signals and live sensor readings for the
+selected site. The banner confirms the background engine is evaluating on its own.
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
-### Live Monitor — continuous monitoring with AI assessment
+### Live Monitor — continuous monitoring
+Engine status, live gauge and the streaming risk chart. Admins can stop the
+engine or force an immediate cycle with **Tick now**.
+
 ![Live Monitor](docs/screenshots/live-monitor.png)
 
-### AI Risk Assessment — drivers, trend, forecast and recommendations
-![AI Insight Panel](docs/screenshots/ai-insight.png)
+### Alert drill — risk escalating
+A drill in progress: risk has climbed to 72% (High) and every component has risen
+with it. The banner and the **SIMULATED READING** label make it unmistakable that
+this is a drill, not a real measurement.
 
-### Alert drill — escalation to Critical
-![Drill escalation](docs/screenshots/drill-critical.png)
+![Drill in progress](docs/screenshots/drill-escalation.png)
+
+### Risk Analysis — Critical, with the breakdown
+The same drill at full escalation: 88% fused (Critical), decomposed into imagery
+82%, sensors 96% and weather 86%, against the five risk bands.
+
+![Risk Analysis](docs/screenshots/risk-analysis.png)
 
 ### Mining Sites — switch between sites or add new ones
+Each site carries its own geology profile — mine type, rock type, slope angle and
+hazard factor — which drives its own sensor simulation, so sites genuinely differ.
+
 ![Mining Sites](docs/screenshots/mining-sites.png)
 
-### Site Graphs — per-site analytics
-![Site Graphs](docs/screenshots/site-graphs.png)
+### Analytics — across the whole network
+Aggregate statistics and current-vs-24-hour-average risk for every monitored site.
 
-### Alerts — threshold breaches, with drill data clearly flagged
-![Alerts](docs/screenshots/alerts.png)
+![Analytics](docs/screenshots/analytics.png)
+
+### Sign in
+Role-based access: Admin, Operator and Guest.
+
+![Login](docs/screenshots/login.png)
 
 ---
 
