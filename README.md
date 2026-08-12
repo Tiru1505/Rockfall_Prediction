@@ -155,6 +155,21 @@ demonstration data can never be mistaken for a real incident.
 
 ---
 
+## 🧠 Deep learning component
+
+A U-Net for landslide segmentation, trained on **Landslide4Sense** (3,799
+labelled 128×128 Sentinel-2 patches, 14 channels including DEM and slope), lives
+in [`training/`](training/) with the full pipeline: data loader, model, losses,
+training loop, evaluation and ONNX export.
+
+The interesting problem is class imbalance — only **~2.3% of pixels are
+landslide**, so a model predicting "background" everywhere scores ~97.7% pixel
+accuracy while detecting nothing. Hence Dice + weighted BCE loss, and IoU/F1
+rather than accuracy.
+
+See [`training/README.md`](training/README.md) for the dataset link, Colab
+instructions and what to report.
+
 ## What's real vs. simulated
 
 | Signal | Status | Source |

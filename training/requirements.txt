@@ -1,0 +1,15 @@
+# Training-only dependencies. NOT installed by the backend — the deployed API
+# serves the exported ONNX model with onnxruntime instead, because PyTorch does
+# not fit in Render's 512MB free tier.
+#
+# On Colab, torch and numpy are already present; you only need h5py.
+
+torch>=2.0
+numpy>=1.24
+h5py>=3.9
+
+# ONNX export. onnxscript is required by torch>=2.6's exporter — without it
+# torch.onnx.export fails with ModuleNotFoundError.
+onnx>=1.15
+onnxscript>=0.1
+onnxruntime>=1.17
