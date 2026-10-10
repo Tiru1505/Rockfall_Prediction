@@ -19,7 +19,7 @@ such — see the main README.
 |---|---|
 | Patches | 3,799 labelled (in `TrainData`) |
 | Size | 128 × 128 pixels |
-| Channels | **14** — Sentinel-2 B1–B12, plus DEM and slope |
+| Channels | **14** — Sentinel-2 B1–B12, plus slope (B13) and DEM (B14), both from ALOS PALSAR |
 | Label | Binary mask, 1 = landslide pixel |
 | Format | HDF5 (`.h5`), keys `img` and `mask` |
 

@@ -8,7 +8,7 @@ decoder that upsamples back while concatenating the matching encoder feature map
 without them the decoder only ever sees heavily downsampled features and
 landslide edges come out blurred.
 
-Input is 14 channels (Sentinel-2 B1-B12 + DEM + slope), not the usual 3, so
+Input is 14 channels (Sentinel-2 B1-B12, plus slope and DEM), not the usual 3, so
 ImageNet-pretrained encoders don't transfer here. The model is trained from
 scratch, which is fine at 128x128 with ~2.6k training patches.
 

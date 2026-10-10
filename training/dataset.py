@@ -1,10 +1,11 @@
 """
 Landslide4Sense dataset loader.
 
-Each sample is a 128x128 patch with 14 channels:
+Each sample is a 128x128 patch with 14 channels (0-indexed here; the official
+Landslide4Sense description numbers them B1-B14):
     0-11  Sentinel-2 surface reflectance bands (B1-B12)
-    12    DEM (elevation)
-    13    Slope
+    12    Slope, from ALOS PALSAR          (B13)
+    13    DEM / elevation, from ALOS PALSAR (B14)
 
 The mask is 128x128, binary: 1 = landslide pixel, 0 = background.
 
