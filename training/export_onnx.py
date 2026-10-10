@@ -42,6 +42,21 @@ def main():
         do_constant_folding=True,
     )
 
+    # torch's current exporter writes tensors above a size threshold to a
+    # sidecar `<name>.onnx.data` file. That leaves the .onnx itself a ~100KB
+    # graph that cannot run on its own, and the sidecar is easy to lose when
+    # copying the model into the backend or downloading it from Colab.
+    # Re-save as one self-contained file.
+    import onnx
+
+    model_proto = onnx.load(args.output)  # pulls in the external data
+    onnx.save_model(model_proto, args.output, save_as_external_data=False)
+
+    sidecar = Path(str(args.output) + ".data")
+    if sidecar.exists():
+        sidecar.unlink()
+        print("merged external weights back into a single file")
+
     size_mb = Path(args.output).stat().st_size / 1e6
     print(f"exported {args.output}  ({size_mb:.1f} MB)")
 
