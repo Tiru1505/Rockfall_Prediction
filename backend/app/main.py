@@ -10,7 +10,7 @@ from app.core.database import Base, engine as db_engine
 from app.models import db_models  # noqa: F401 (ensures models are registered)
 from app.routers import (
     auth, weather, earthquakes, sensors, predictions, analytics, admin,
-    sites, monitor,
+    sites, monitor, landslide,
 )
 from app.services.monitoring_engine import engine as monitoring
 
@@ -84,6 +84,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(sites.router)
 app.include_router(monitor.router)
+app.include_router(landslide.router)
 app.include_router(weather.router)
 app.include_router(earthquakes.router)
 app.include_router(sensors.router)

@@ -128,13 +128,39 @@ the physical meaning of reflectance bands.
 the bands are on wildly different scales — reflectance is ~0–3 while elevation
 is in metres.
 
-### Numbers to expect
+### Results actually achieved
 
-Published Landslide4Sense baselines land around **F1 0.70–0.75**. If you get
-**IoU 0.50–0.65 / F1 0.65–0.75** on the test split, that's a solid result.
+40 epochs, Adam lr 1e-3, batch 16, ~40 min on a Colab T4. Best validation IoU
+**0.4538 at epoch 32**. Held-out test split, 569 patches:
 
-If you see IoU near 0.95, something is wrong — most likely the same patch
-appearing in both train and test.
+| Metric | @ 0.5 | **@ 0.9 (tuned)** |
+|---|---|---|
+| IoU (Jaccard) | 0.4555 | **0.5758** |
+| F1 / Dice | 0.6259 | **0.7308** |
+| Precision | 0.4688 | 0.6580 |
+| Recall | 0.9415 | 0.8217 |
+
+F1 0.73 is in line with published baselines (0.70–0.75).
+
+![Training curves](../docs/training_curves.png)
+
+**The headline finding.** Model pixel accuracy is 97.35%; predicting
+"no landslide" everywhere scores 97.65%. The trivial baseline *beats* the model
+on accuracy while detecting nothing — the clearest possible demonstration of why
+this task needs IoU and F1.
+
+**Threshold tuning is worth 12 IoU points.** `pos_weight ≈ 42` keeps the model
+from collapsing to background, but makes it over-predict: recall 0.94 against
+precision 0.47 at the 0.5 cut-off. IoU rises monotonically across the sweep to
+0.576 at 0.9. It had not yet turned over at 0.9, so testing 0.93–0.97 may gain a
+little more.
+
+**No overfitting.** Over the last five epochs train IoU averaged 0.4164 against
+val IoU 0.4323 — validation sits *above* training, so there is headroom in
+longer training or a larger `base`.
+
+If you retrain and see IoU near 0.95, something is wrong — most likely the same
+patch appearing in both train and test.
 
 ### Good ablations, if you want more depth
 

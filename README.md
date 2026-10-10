@@ -155,20 +155,60 @@ demonstration data can never be mistaken for a real incident.
 
 ---
 
-## 🧠 Deep learning component
+## 🧠 Deep learning — landslide segmentation U-Net
 
-A U-Net for landslide segmentation, trained on **Landslide4Sense** (3,799
-labelled 128×128 Sentinel-2 patches, 14 channels including DEM and slope), lives
-in [`training/`](training/) with the full pipeline: data loader, model, losses,
-training loop, evaluation and ONNX export.
+A U-Net trained from scratch on **Landslide4Sense** to segment landslide pixels
+in Sentinel-2 satellite imagery. This is the one genuinely learned component in
+the system; everything else is documented statistics.
 
-The interesting problem is class imbalance — only **~2.3% of pixels are
-landslide**, so a model predicting "background" everywhere scores ~97.7% pixel
-accuracy while detecting nothing. Hence Dice + weighted BCE loss, and IoU/F1
-rather than accuracy.
+| | |
+|---|---|
+| Architecture | U-Net, 4 down / 4 up with skip connections, **7.8M parameters** |
+| Input | 128×128 × **14 channels** — Sentinel-2 B1–B12, slope (B13), DEM (B14) |
+| Data | 3,799 labelled patches, split 70/15/15 (seed 42) |
+| Training | 40 epochs, Adam lr 1e-3, ReduceLROnPlateau, batch 16, ~40 min on a T4 |
+| Loss | Dice + weighted BCE (`pos_weight ≈ 42`) |
+| Serving | Exported to ONNX (31 MB), run with ONNX Runtime |
 
-See [`training/README.md`](training/README.md) for the dataset link, Colab
-instructions and what to report.
+### Results — held-out test split, 569 patches
+
+| Metric | @ 0.5 | **@ 0.9 (tuned)** |
+|---|---|---|
+| **IoU (Jaccard)** | 0.4555 | **0.5758** |
+| **F1 / Dice** | 0.6259 | **0.7308** |
+| Precision | 0.4688 | 0.6580 |
+| Recall | 0.9415 | 0.8217 |
+
+F1 **0.73** is in line with published Landslide4Sense baselines (0.70–0.75).
+
+![Training curves](docs/training_curves.png)
+
+### Why accuracy is not reported
+
+This model scores **97.35% pixel accuracy**. Predicting "no landslide"
+everywhere scores **97.65%** on the same split.
+
+**The trivial baseline beats the model on accuracy — while detecting nothing at
+all.** That is the entire reason this project reports IoU and F1 instead, and
+why the loss is Dice-based rather than plain cross-entropy. `evaluate.py` prints
+accuracy deliberately, next to the real metrics, so the gap is visible.
+
+### Threshold matters here
+
+`pos_weight ≈ 42` stops the model collapsing to the majority class, but it also
+makes it over-predict: at the default 0.5 cut-off recall is 0.94 while precision
+is only 0.47. Sweeping the threshold moves IoU from 0.456 to **0.576 at 0.9**,
+which is what the served model uses by default.
+
+### Try it
+
+```
+GET  /api/landslide/info      model card + the metrics above  (public)
+POST /api/landslide/predict   upload a .h5 patch -> mask + pixel fraction
+```
+
+Full pipeline, dataset link and Colab notebook: [`training/`](training/) ·
+[one-click Colab](https://colab.research.google.com/github/Tiru1505/Rockfall_Prediction/blob/main/training/Landslide4Sense_UNet.ipynb)
 
 ## What's real vs. simulated
 

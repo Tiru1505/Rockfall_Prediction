@@ -14,3 +14,8 @@ email-validator==2.2.0
 # Postgres driver — needed in production (Render). Unused on the local SQLite
 # default, so it is harmless to have installed everywhere.
 psycopg2-binary==2.9.9
+# Serves the trained landslide U-Net (backend/app/models_ml/*.onnx).
+# PyTorch is deliberately NOT a dependency: ~800MB installed, which would
+# exceed Render's 512MB tier on import. onnxruntime is ~15MB.
+onnxruntime==1.19.2
+h5py==3.11.0
